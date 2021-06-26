@@ -16,14 +16,17 @@ api = Api(app)
 @app.route('/result')
 def Result():
         conn = db_connect.connect() # connect to database
-        result ={}
+        result =[]
         query = conn.execute("select * from DATA") # This line performs query and returns json result
         data = query.fetchall()
         for i in data:
-            result[i[0]] = i[1]
-        #return hello
- 
-        return(result)
+            #result[i[0]] = i[1]
+            hello = {'plantiff':i[0],'defendent':i[1]}
+            result.append(hello)
+        unique = { each['plantiff'] : each for each in result }.values()
+        toJSON = json.dumps(list(unique))
+        return(toJSON)
+
 @app.route('/input/<string:xml_name>')
 def Input(xml_name):
         
