@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request ,make_response
 from flask_restful import Resource, Api
 from sqlalchemy import create_engine
 import json
@@ -13,8 +13,8 @@ db_connect = create_engine('sqlite:///test.db')
 app = Flask(__name__)
 api = Api(app)
 
-class Result(Resource):
-    def get(self):
+@app.route('/result')
+def Result():
         conn = db_connect.connect() # connect to database
         result ={}
         query = conn.execute("select * from DATA") # This line performs query and returns json result
@@ -22,16 +22,21 @@ class Result(Resource):
         for i in data:
             result[i[0]] = i[1]
         #return hello
+ 
         return(result)
-
-class Input(Resource):
-    def get(self):
-        doc= xml.dom.minidom.parse('../LM_backend_challenge/B.xml')
+@app.route('/input/<string:xml_name>')
+def Input(xml_name):
+        
+        try:
+            doc= xml.dom.minidom.parse('../LM_backend_challenge/'+xml_name+'.xml')
+        except :
+            return json.dumps({'errors':"error"})
         hello = doc.getElementsByTagName('formatting')
         arr=[]
         for elem in hello:
             arr.append(elem.firstChild.data)
         tryy(arr)
+        return json.dumps({'result': 'Data Uploaded','status': 200})
 
 def tryy(arrr):
     finalArray = []
@@ -42,11 +47,8 @@ def tryy(arrr):
         if(ell.__contains__("Defendants.")):
             finalArray.append(ell)
     
-    #print(arrr.index("Plaintiff,    j    "))
     hello = finalArray[len(finalArray)-1]
     bye = finalArray[len(finalArray)-2]
-    #print(arrr)
-
     total = arrr[arrr.index(hello)-3]+arrr[arrr.index(hello)-2]+arrr[arrr.index(hello)-1]
 
     
@@ -59,13 +61,7 @@ def tryy(arrr):
     conn = db_connect.connect()  
     addData = f"""INSERT INTO DATA VALUES('{liveArray[0]}', '{liveArray[1]}')"""
     conn.execute(addData)
-    return ("Data added successfully!")
-
-
         
-
-api.add_resource(Input, '/input')
-api.add_resource(Result, '/result')
 
 
 if __name__ == '__main__':
